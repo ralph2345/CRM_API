@@ -1,0 +1,75 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Crm.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Crm.Domain.Interfaces;
+using Crm.Domain;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+
+namespace Crm.Persistence.Repositories
+{
+    public class LeadsRepository : ILeadsRepository
+    {
+        CrmDbContext _context;
+
+        public LeadsRepository(CrmDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<(IEnumerable<LeadTbl>, int)> GetAllLeadsAsync(int pageNumber, int pageSize)
+        {
+            var leadsQuery =  _context.LeadTbl
+                .Include(lead => lead.SalesRep)
+                .Include(lead => lead.Payment)
+                .AsNoTracking();
+
+            int totalRecords = await leadsQuery.CountAsync();  // Get total count before pagination
+
+            // Apply pagination
+            var paginatedLeads = await leadsQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (paginatedLeads, totalRecords);
+        }
+
+        public async Task<LeadTbl> GetLeadByIdAsync(int id)
+        {
+#pragma warning disable CS8603 // Possible null reference return.
+            return await _context.LeadTbl
+                .Include(lead => lead.SalesRep)
+                .Include(lead => lead.Payment)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(lead => lead.LeadId == id);
+#pragma warning restore CS8603 // Possible null reference return.
+        }
+
+        public async Task AddLeadAsync(LeadTbl lead, SalesRep sales, Payment payment)
+        {
+            if (lead == null)
+            {
+                throw new ArgumentNullException(nameof(lead));
+            }
+            await _context.LeadTbl.AddAsync(lead);
+            await _context.SaveChangesAsync();
+
+            if (sales != null)
+            {
+                sales.LeadId = lead.LeadId; // Set the foreign key relationship
+                await _context.SalesReps.AddAsync(sales);   
+            }
+            if (payment != null)
+            {
+                payment.LeadId = lead.LeadId; // Set the foreign key relationship
+                await _context.Payment.AddAsync(payment);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+    }
+}
