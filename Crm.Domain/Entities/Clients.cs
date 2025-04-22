@@ -26,5 +26,6 @@ namespace Crm.Domain.Entities
         public List<ContactPerson> ContactPerson { get; set; } = new List<ContactPerson>();
         public ClientDetails? ClientDetails { get; set; }
         public ICollection<TaskDetails> TaskDetails { get; set; } = new List<TaskDetails>();
+        public LeadTbl? LeadTbl { get; set; }
     }       
 }

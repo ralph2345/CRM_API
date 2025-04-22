@@ -93,7 +93,16 @@ namespace Crm.Persistence.Repositories
             return task;
         }
 
+        public async Task <IEnumerable<TaskDetails>> GetAllArchieveAsync()
+        {
+            return await _context.TaskDetails
+                .Where(t => t.IsArchived == true)
+                .Include(t => t.Clients)
+                .AsNoTracking()
+                .ToListAsync();
+        }
 
+       
         public async Task AddTaskAsync(TaskDetails task)
         {
             await _context.TaskDetails.AddAsync(task);

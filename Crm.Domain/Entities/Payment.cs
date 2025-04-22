@@ -12,7 +12,7 @@ namespace Crm.Domain.Entities
     {
         [Key]
         public int PaymentId { get; set; }
-        public Decimal? Price { get; set; }
+        public Decimal? EstimatedValue { get; set; }
         public Decimal? Discount { get; set; }
         public Decimal? TotalPrice { get; set; }
         public string? PaymentTerms { get; set; }

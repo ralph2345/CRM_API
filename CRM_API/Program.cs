@@ -96,7 +96,7 @@ builder.Services.AddScoped<ILeadsRepository, LeadsRepository>();
 
 // Configure JWT Authentication
 //var key = Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtKey"));
-var jwtKey = builder.Configuration["JwtKey"];
+/*var jwtKey = builder.Configuration["JwtKey"];
 if (string.IsNullOrWhiteSpace(jwtKey))
 {
     throw new Exception("JwtKey is missing from secrets.");
@@ -126,8 +126,7 @@ builder.Services
             //ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
         };
-    });
-
+    });*/
 
 
 builder.Services.AddAuthorization();

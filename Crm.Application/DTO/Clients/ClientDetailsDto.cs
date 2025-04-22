@@ -10,6 +10,7 @@ namespace Crm.Application.DTO.Clients
     {
         public string? LeadSources { get; set; }
         public string? ClientType { get; set; }
-        public List<string>? Notes { get; set; }
+        public List<NoteDto>? Notes { get; set; }
+        
     }
 }

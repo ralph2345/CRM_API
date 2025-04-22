@@ -11,7 +11,7 @@ namespace Crm.Domain.Interfaces
     {
         Task <(IEnumerable<LeadTbl>,int)> GetAllLeadsAsync(int pageNumber, int pageSize);
         Task<LeadTbl> GetLeadByIdAsync(int id);
-        Task AddLeadAsync(LeadTbl lead, SalesRep sales, Payment payment);
+        Task AddLeadAsync(LeadTbl lead, DealTbl deals, Payment payment);
         //Task UpdateLeadAsync(LeadTbl lead);
         //Task DeleteLeadAsync(int id);
     }

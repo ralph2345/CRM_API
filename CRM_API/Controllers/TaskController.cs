@@ -38,6 +38,14 @@ namespace CRM_API.Controllers
             return Ok(task);
         }
 
+        [HttpGet("all-archive-tasks")]
+        public async Task<IActionResult> GetAllArchiveTasks()
+        {
+            var tasks = await _taskService.AllArchiveTask();
+            if (tasks == null || !tasks.Any()) { return NotFound(new { Message = $"No archived task found" }); }
+            return Ok(tasks);
+        }
+
         [HttpPost("add-task")]
         public async Task<IActionResult> AddTask([FromBody] CreateTaskDto task)
         {

@@ -11,6 +11,7 @@ namespace Crm.Domain.Interfaces
     {
         Task<(IEnumerable<TaskDetails>, int)> GetAllTaskAsync(TaskFilters filters,int pageNumber, int pageSize);
         Task <TaskDetails> GetTaskByIdAsync(int id);
+        Task <IEnumerable<TaskDetails>> GetAllArchieveAsync();
         Task <List<TaskDetails>> SearchTaskAsync(string? name);
         Task<string?> GetClientFullNameAsync(int clientId);
         Task AddTaskAsync(TaskDetails task);

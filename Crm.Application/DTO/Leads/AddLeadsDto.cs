@@ -9,14 +9,18 @@ namespace Crm.Application.DTO.Leads
 {
     public class AddLeadsDto
     {
+        //delete full name to industry if frontend stick to get client data via client id 
+        public string? FullName { get; set; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? CompanyName { get; set; }
+        public string? Industry { get; set; }
         public string? LeadSource { get; set; }
-        public string? LeadStatus { get; set; }
-        public string? SalesStage { get; set; }
-        public string? Product { get; set; }
-        public string? DealName { get; set; }
-        public DateOnly? ExpectedCloseDate { get; set; }
+        public string? Status { get; set; }
 
-        public AddSalesRepDto? SalesRep { get; set; } 
+        public int? ClientID { get; set; }
+
+        public AddDealsDto? Deals { get; set; } 
         public AddPaymentDto? Payment { get; set; } 
     }
 }

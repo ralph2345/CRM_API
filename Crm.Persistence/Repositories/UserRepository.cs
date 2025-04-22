@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 using Crm.Domain.Interfaces;
 using Crm.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Crm.Domain;
 
 namespace Crm.Persistence.Repositories
 {
@@ -55,7 +57,8 @@ namespace Crm.Persistence.Repositories
 
         public async Task<Users> GetUserByUsernameAsync(string username)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.UserName == username);
         }
 
         public async Task AddUserAsync(Users user)
@@ -70,11 +73,6 @@ namespace Crm.Persistence.Repositories
             await _context.SaveChangesAsync();  
         }
 
-        /*public async Task DeleteUserAsync(Users user)
-        {
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-        }*/
         public async Task IsDeactivateUserAsync(bool isDeactivate, int userId)
         {
             var user = await GetUserByIdAsync(userId);
@@ -88,6 +86,7 @@ namespace Crm.Persistence.Repositories
         public async Task<Users?> GetUserByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        }
+        }   
+
     }
 }

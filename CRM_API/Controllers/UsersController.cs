@@ -33,6 +33,10 @@ namespace CRM_API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);  // Will return validation error details if the DTO is not valid.
+            }
             var response = await _userService.RegisterAsync(request);
             if (!response.Success)
             {
@@ -52,17 +56,22 @@ namespace CRM_API.Controllers
         {
             if (request == null)
             {
-                return BadRequest(new { code = 400, message = "Invalid request data" });
+                return BadRequest(new {message = "Invalid request data" });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);  // Will return validation error details if the DTO is not valid.
             }
 
             var result = await _userService.UpdateUserAsync(userId, request);
 
             if (result == "User not found")
             {
-                return NotFound(new { code = 404, message = "User not found" });
+                return NotFound(new {message = "User not found" });
             }
 
-            return Ok(new { code = 200, message = result });
+            return Ok(new {message = result });
         }
 
         [HttpPut("is-deactivate/{userId}")]

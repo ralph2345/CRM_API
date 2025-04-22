@@ -21,6 +21,16 @@ namespace Crm.Domain.Entities
         public string? Email { get; set; }
         public string? PasswordHash { get; set; }
         public DateTime? EmailExpiration { get; set; }
+        public string? JWToken { get; set; }
+        public DateTime? TokenExpiry { get; set; }
+
+        public void SetToken(string encryptedToken, bool rememberMe)
+        {
+            JWToken = encryptedToken;
+            TokenExpiry = rememberMe
+                ? DateTime.UtcNow.AddDays(7)
+                : DateTime.UtcNow.AddHours(1);
+        }
 
     }
 }

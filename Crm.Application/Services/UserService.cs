@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using BCrypt.Net;
 using Crm.Domain.Interfaces;
 using Crm.Application.Interfaces;
@@ -21,12 +22,11 @@ namespace Crm.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IEmailService _emailService;
-        private readonly JwtService _jwtService;
+        
 
-        public UserService(IUserRepository userRepository, JwtService jwt, IEmailService emailService)
+        public UserService(IUserRepository userRepository, IEmailService emailService)
         {
             _userRepository = userRepository;
-            _jwtService = jwt;
             _emailService = emailService;
         }
 
@@ -77,47 +77,48 @@ namespace Crm.Application.Services
         {
             var user = await _userRepository.GetUserByUsernameAsync(request.UserName);
 
-            //checking if the user exists
             if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
             {
-                return new LoginResponseDto
-                {
-                    Success = false,
-                    Message = "Invalid username or password",
-                    SessionToken = string.Empty,
-                    PhotoLink = string.Empty,
-                    FirstName = string.Empty,
-                    LastName = string.Empty,
-                    Email = string.Empty,
-                };
+                return FailedLoginResponse("Invalid username or password");
             }
 
-            //checking if the account is active
             if (user.Status != "Active")
             {
-                return new LoginResponseDto
-                {
-                    Success = false,
-                    Message = "Account is inactive",
-                    SessionToken = string.Empty,
-                    PhotoLink = string.Empty,
-                    FirstName = string.Empty,
-                    LastName = string.Empty,
-                    Email = string.Empty,
-                };
+                return FailedLoginResponse("Account is inactive");
             }
 
-            var token = _jwtService.GenerateToken(user, request.RememberMe);
+            // Generate token
+            var token = GenerateRandomToken();
+            var encryptedToken = EncryptTokenAES(token);
 
-            //returned data on front end for successful login
+            // Set token in domain model
+            user.SetToken(encryptedToken, request.RememberMe);
+
+            //update user tokens on db
+            await _userRepository.UpdateUserAsync(user);
+
             return new LoginResponseDto
             {
                 Success = true,
-                SessionToken = token,
+                SessionToken = user.JWToken,
                 PhotoLink = user.PhotoLink,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
+            };
+        }
+
+        private LoginResponseDto FailedLoginResponse(string message)
+        {
+            return new LoginResponseDto
+            {
+                Success = false,
+                Message = message,
+                SessionToken = string.Empty,
+                PhotoLink = string.Empty,
+                FirstName = string.Empty,
+                LastName = string.Empty,
+                Email = string.Empty,
             };
         }
 
@@ -158,16 +159,6 @@ namespace Crm.Application.Services
             }
             
         }
-
-        /*public async Task<string> DeleteUserAsync(int userId)
-        {
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user == null) return "User not found";
-
-            await _userRepository.DeleteUserAsync(user);
-            return "User Deleted Successfully!";
-        }*/
-
         public async Task<ApiResponseDto> ForgotPasswordAsync(ForgotPasswordDto request)
         {
             Console.WriteLine($"Forgot Password Request for Email: {request.Email}");
@@ -185,16 +176,13 @@ namespace Crm.Application.Services
                 return new ApiResponseDto(false, "The email must match on your saved account");
             }
 
-            byte[] emailBytes = System.Text.Encoding.UTF8.GetBytes(user.Email);
-            string encryptedEmail = Convert.ToBase64String(emailBytes);
+            //byte[] emailBytes = System.Text.Encoding.UTF8.GetBytes(user.Email);
+            //string encryptedEmail = Convert.ToBase64String(emailBytes);
 
             user.EmailExpiration = DateTime.UtcNow.AddHours(1);
 
             await _userRepository.UpdateUserAsync(user);
-
-            //generate token for request forgotpassword
-            //var token = _jwtService.GeneratePasswordResetToken(user);
-
+            
             //send email with reset password link
             await _emailService.SendPasswordResetEmail(user.Email);
             Console.WriteLine("Email Sent.");
@@ -206,8 +194,6 @@ namespace Crm.Application.Services
 
         public async Task<ApiResponseDto> ResetPasswordAsync(ResetPasswordDto request)
         {
-            // Trim token to remove any whitespace or trailing characters
-            //request.Token = request.Token.TrimEnd('.', ')', '"', ' ');
 
             var user = await _userRepository.GetUserByEmailAsync(request.Email);
             if (user == null)
@@ -255,6 +241,63 @@ namespace Crm.Application.Services
                 UserName = user.UserName,
                 Email = user.Email
             };
+        }
+        private string GenerateRandomToken(int length = 10)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var data = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(data);
+            }
+
+            var builder = new StringBuilder(length);
+            foreach (var b in data)
+            {
+                builder.Append(chars[b % chars.Length]);
+            }
+
+            return builder.ToString();
+        }
+
+        //encrypting the token using AES
+        private string EncryptTokenAES(string plainText, int length = 10)
+        {
+            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            string encryptionKey = Environment.GetEnvironmentVariable("ENCRYPTION_KEY") ?? "default_key";
+            if (string.IsNullOrWhiteSpace(encryptionKey))
+            {
+                throw new Exception("Encryption key is missing from secrets.");
+            }
+
+            using (Aes aes = Aes.Create())
+            {
+                var keyBytes = new Rfc2898DeriveBytes(encryptionKey, new byte[] {
+                    0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65,
+                    0x64, 0x76, 0x65, 0x64, 0x65, 0x76
+                });
+
+                aes.Key = keyBytes.GetBytes(32);
+                aes.IV = keyBytes.GetBytes(16);
+
+                using (var encryptor = aes.CreateEncryptor())
+                using (var ms = new MemoryStream())
+                using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+                {
+                    byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+                    cs.Write(plainBytes, 0, plainBytes.Length);
+                    cs.FlushFinalBlock();
+
+                    byte[] encryptedBytes = ms.ToArray();
+
+                    // Convert to Base64 and filter to only alphanumerics
+                    string base64 = Convert.ToBase64String(encryptedBytes);
+                    string alphanumeric = new string(base64.Where(c => validChars.Contains(c)).ToArray());
+
+                    // Trim to requested length
+                    return alphanumeric.Length > length ? alphanumeric.Substring(0, length) : alphanumeric;
+                }
+            }
         }
 
     }

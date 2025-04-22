@@ -13,7 +13,7 @@ namespace Crm.Domain.Entities
         [Key]
         public int CommentId { get; set; }
         public string? Content { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         [ForeignKey("ClientDetails")]
         public int ClientDetailsId { get; set; }

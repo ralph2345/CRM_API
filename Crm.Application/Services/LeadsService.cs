@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Crm.Application.DTO.Leads;
 using Crm.Domain.Interfaces;
 using Crm.Application.Interfaces;
 using Crm.Domain.Entities;
 using Crm.Application.DTO;
-using System.Net.Sockets;
 
 namespace Crm.Application.Services
 {
     public class LeadsService : ILeadsService
     {
-        public ILeadsRepository _leadsRepository;
-        public LeadsService(ILeadsRepository leadsRepository)
+        public readonly ILeadsRepository _leadsRepository;
+        public readonly IClientRepository _clientRepository;
+
+        public LeadsService(ILeadsRepository leadsRepository, IClientRepository clientRepository)
         {
             _leadsRepository = leadsRepository;
+            _clientRepository = clientRepository;
         }
 
         public async Task<PaginatedResponse<LeadsDto>> GetAllLeadsAsync(int pageNumber, int pageSize)
@@ -49,29 +49,55 @@ namespace Crm.Application.Services
                 throw new ArgumentNullException(nameof(leads));
             }
 
+            // this block get the data of client from leads.
+            // uncomment this block if the frontend use search client endpoints and also frontend
+            // is responsible for populating client data on leads data.
+
+            if (leads.ClientID != null)
+            {
+                var client = await _clientRepository.GetClientsByIdAsync(leads.ClientID.Value);
+
+                if (client != null)
+                {
+                    leads.FullName = string.IsNullOrEmpty(leads.FullName)
+                        ? $"{client.FirstName} {client.MiddleName} {client.LastName}".Trim()
+                        : leads.FullName;
+
+                    leads.Email = string.IsNullOrEmpty(leads.Email) ? client.Email : leads.Email;
+                    leads.PhoneNumber = string.IsNullOrEmpty(leads.PhoneNumber) ? client.PhoneNumber : leads.PhoneNumber;
+                    leads.CompanyName = string.IsNullOrEmpty(leads.CompanyName) ? client.CompanyDetails?.CompanyName : leads.CompanyName;
+                    leads.Industry = string.IsNullOrEmpty(leads.Industry) ? client.CompanyDetails?.IndustryType : leads.Industry;
+                }
+            }
+
             var leadEntity = new LeadTbl
             {
+                FullName = leads.FullName,
+                Email = leads.Email,
+                PhoneNumber = leads.PhoneNumber,
+                CompanyName = leads.CompanyName,
+                Industry = leads.Industry,
                 LeadSource = leads.LeadSource,
-                LeadStatus = leads.LeadStatus,
-                SalesStage = leads.SalesStage,
-                Product = leads.Product,
-                DealName = leads.DealName,
-                ExpectedCloseDate = leads.ExpectedCloseDate,
+                Status = leads.Status,
+                ClientID = leads.ClientID, //getting client information through client id, uncomment this if frontend use search client endpoints
             };
 
-            var sales = new SalesRep
+            var deals = new DealTbl
             {
-                AssignedSalesRep = leads.SalesRep?.AssignedSalesRep,
-                FollowUpDate = leads.SalesRep?.FollowUpDate,
-                NextAction = leads.SalesRep?.NextAction,
-                LastContactDate = leads.SalesRep?.LastContactDate
+                DealName = leads.Deals?.AssignedSalesRep,
+                DealValue = leads.Deals?.DealValue,
+                Currency = leads.Deals?.Currency,
+                Stage = leads.Deals?.Stage,
+                AssignedSalesRep = leads.Deals?.AssignedSalesRep,
+                Status = leads.Deals?.Status,
+                Notes = leads.Deals?.Notes,
             };
 
-            var totalPrice = CalculateTotalPrice(leads.Payment?.Price, leads.Payment?.Discount);
+            var totalPrice = CalculateTotalPrice(leads.Payment?.EstimatedValue, leads.Payment?.Discount);
 
             var payment = new Payment
             {
-                Price = leads.Payment?.Price,
+                EstimatedValue = leads.Payment?.EstimatedValue,
                 Discount = leads.Payment?.Discount,
                 TotalPrice = totalPrice,
                 PaymentTerms = leads.Payment?.PaymentTerms,
@@ -79,7 +105,7 @@ namespace Crm.Application.Services
                 PaymentStatus = leads.Payment?.PaymentStatus
             };
 
-            await _leadsRepository.AddLeadAsync(leadEntity, sales, payment);
+            await _leadsRepository.AddLeadAsync(leadEntity, deals, payment);
             return "Lead added successfully";
 
         }
@@ -95,23 +121,30 @@ namespace Crm.Application.Services
         {
             return new LeadsDto
             {
+                LeadId = lead.LeadId,
+                FullName = lead.FullName,
+                Email = lead.Email,
+                PhoneNumber = lead.PhoneNumber,
+                CompanyName = lead.CompanyName,
+                Industry = lead.Industry,
                 LeadSource = lead.LeadSource,
-                LeadStatus = lead.LeadStatus,
-                SalesStage = lead.SalesStage,
-                Product = lead.Product,
-                DealName = lead.DealName,
-                ExpectedCloseDate = lead.ExpectedCloseDate,
-               
-                SalesRep = lead.SalesRep == null ? null : new SalesRepDto
+                Status = lead.Status,
+                DateCreated = lead.DateCreated,
+
+                Deals = lead.DealTbl == null ? null : new DealsDto
                 {
-                    AssignedSalesRep = lead.SalesRep.AssignedSalesRep,
-                    FollowUpDate = lead.SalesRep.FollowUpDate,
-                    NextAction = lead.SalesRep.NextAction,
-                    LastContactDate = lead.SalesRep.LastContactDate
+                    DealName = lead.DealTbl.AssignedSalesRep,
+                    DealValue = lead.DealTbl.DealValue,
+                    Currency = lead.DealTbl.Currency,
+                    Stage = lead.DealTbl.Stage,
+                    AssignedSalesRep = lead.DealTbl.AssignedSalesRep,
+                    Status = lead.DealTbl.Status,
+                    Notes = lead.DealTbl.Notes    
                 },
+
                 Payment = lead.Payment == null ? null : new PaymentDto
                 {
-                    Price = lead.Payment.Price,
+                    EstimatedValue = lead.Payment.EstimatedValue,
                     Discount = lead.Payment.Discount,
                     TotalPrice = lead.Payment.TotalPrice,
                     PaymentTerms = lead.Payment.PaymentTerms,

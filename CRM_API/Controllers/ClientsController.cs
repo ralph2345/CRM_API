@@ -78,6 +78,10 @@ namespace CRM_API.Controllers
         [HttpPost("add-client")]
         public async Task<IActionResult> AddClient([FromBody] AddClientsDto request)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);  // Will return validation error details if the DTO is not valid.
+            }
             var response = await _clientService.AddClientAsync(request);
             if (response == null) { return BadRequest(new {Message = $"Unable to add client please check your data"}); }
             return Created("",response);
@@ -96,8 +100,17 @@ namespace CRM_API.Controllers
         public async Task<IActionResult> UpdateClient(int clientId, [FromBody] UpdateClientsDto request)
         {
             if (request == null) { return BadRequest(); }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);  // Will return validation error details if the DTO is not valid.
+            }
             var response = await _clientService.UpdateClientAsync(clientId, request);
             if (response == null) { return BadRequest(new {Message = $"Unable to update client"}); }
+
+            if (response == "Invalid company address format. Expected format: 'ZipCode, City, StateProvince, Country'")
+            {
+                return BadRequest(new { Message = response });
+            }
             return Ok(response);
         }
 

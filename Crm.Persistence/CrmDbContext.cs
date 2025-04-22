@@ -21,7 +21,7 @@ namespace Crm.Persistence
         public DbSet<Comments> Comments { get; set; }
         public DbSet<TaskDetails> TaskDetails { get; set; }
         public DbSet<LeadTbl> LeadTbl { get; set; }
-        public DbSet<SalesRep> SalesReps { get; set; }
+        public DbSet<DealTbl> DealTbl { get; set; }
         public DbSet<Payment> Payment { get; set; }
 
         //public DbSet<PasswordResetTokens> PasswordResetTokens { get; set; }
@@ -35,15 +35,9 @@ namespace Crm.Persistence
             modelBuilder.Entity<Comments>().ToTable("Comments");
             modelBuilder.Entity<TaskDetails>().ToTable("TaskDetails");
             modelBuilder.Entity<LeadTbl>().ToTable("LeadTbl");
-            modelBuilder.Entity<SalesRep>().ToTable("SalesRep");
+            modelBuilder.Entity<DealTbl>().ToTable("DealTbl");
             modelBuilder.Entity<Payment>().ToTable("Payment");
-
-            /* modelBuilder.Entity<PasswordResetTokens>()
-                 .ToTable("PasswordResetTokens")
-                 .HasOne(p => p.User)
-                 .WithMany()
-                 .HasForeignKey(p => p.UserId)
-                 .OnDelete(DeleteBehavior.Cascade); // Deletes tokens if user is deleted*/
+           
 
             modelBuilder.Entity<Clients>(entity =>
             {
@@ -56,6 +50,10 @@ namespace Crm.Persistence
                       .WithOne(cd => cd.Clients)
                       .HasForeignKey<ClientDetails>(ct => ct.ClientID);
 
+                entity.HasOne(c => c.LeadTbl)
+                      .WithOne(l => l.Clients)
+                      .HasForeignKey<LeadTbl>(l => l.ClientID);
+
                 // One-to-Many relationships
                 entity.HasMany(c => c.ContactPerson)
                       .WithOne(cp => cp.Clients)
@@ -64,6 +62,7 @@ namespace Crm.Persistence
                 entity.HasMany(c => c.TaskDetails)
                       .WithOne(t => t.Clients)
                       .HasForeignKey(t => t.ClientID);
+
             });
 
             modelBuilder.Entity<ClientDetails>(entity =>
@@ -77,53 +76,14 @@ namespace Crm.Persistence
 
             modelBuilder.Entity<LeadTbl>(entity =>
             {
-                entity.HasOne(l => l.SalesRep) // Lead has one SalesRep
+                entity.HasOne(l => l.DealTbl) // Lead has one SalesRep
                       .WithOne(sr => sr.LeadTbl) // SalesRep belongs to one Lead
-                      .HasForeignKey<SalesRep>(sr => sr.LeadId);
+                      .HasForeignKey<DealTbl>(sr => sr.LeadId);
 
                 entity.HasOne(p => p.Payment) // Lead has one SalesRep
                       .WithOne(pt => pt.LeadTbl) // SalesRep belongs to one Lead
                       .HasForeignKey<Payment>(pt => pt.LeadId);
             });
-
-
-
-            //Entities for clients
-            /*modelBuilder.Entity<Clients>()
-                .HasOne(c => c.CompanyDetails)
-                .WithOne(cd => cd.Clients)// one to one setup
-                .HasForeignKey<CompanyDetails>(cd => cd.ClientID);
-
-            modelBuilder.Entity<Clients>()
-                .HasMany(c => c.ContactPerson)//one client can have many contact persons
-                .WithOne(cp => cp.Clients)
-                .HasForeignKey(cp => cp.ClientID);
-
-            modelBuilder.Entity<Clients>()
-                .HasOne(c => c.ClientDetails)
-                .WithOne(cp => cp.Clients)
-                .HasForeignKey<ClientDetails>(ct => ct.ClientID);
-
-            modelBuilder.Entity<ClientDetails>()
-                .HasMany(c => c.Notes) // one ClientDetails can have many Comments
-                .WithOne(cm => cm.ClientDetails) // each Comment belongs to one ClientDetails
-                .HasForeignKey(cm => cm.ClientDetailsId);
-
-            modelBuilder.Entity<Clients>()
-                .HasMany(c => c.TaskDetails)// one client can have many tasks
-                .WithOne(c => c.Clients)
-                .HasForeignKey(t => t.ClientID);*/
-
-            //entities for Leads
-            /*modelBuilder.Entity<LeadTbl>()
-                .HasOne(l => l.SalesRep) // Lead has one SalesRep
-                .WithOne(sr => sr.LeadTbl) // SalesRep belongs to one Lead
-                .HasForeignKey<SalesRep>(sr => sr.LeadId);  // Foreign key in SalesRep
-
-            modelBuilder.Entity<LeadTbl>()
-                .HasOne(p =>  p.Payment)//lead has one payment
-                .WithOne(pt => pt.LeadTbl)
-                .HasForeignKey<Payment>(pt => pt.LeadId); // Foreign key in Payment*/
 
             base.OnModelCreating(modelBuilder);
         }

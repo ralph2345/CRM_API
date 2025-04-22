@@ -8,14 +8,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Crm.Domain.Entities
 {
-    public class SalesRep
+    public class DealTbl
     {
         [Key]
-        public int SalesRepId { get; set; }
+        public int DealId { get; set; }
+        public string? DealName { get; set; }
+        public Decimal? DealValue { get; set; }
+        public string? Currency { get; set; }
+        public string? Stage { get; set; }
         public string? AssignedSalesRep { get; set; }
-        public DateOnly? FollowUpDate { get; set; }
-        public DateOnly? NextAction { get; set; }
-        public DateOnly? LastContactDate { get; set; }
+        public string? Status { get; set; }
+        public string? Notes { get; set; }
 
         [ForeignKey("LeadId")]
         public LeadTbl LeadTbl { get; set; } = null!;

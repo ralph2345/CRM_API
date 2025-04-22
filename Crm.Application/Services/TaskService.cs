@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Crm.Domain.Entities;
 using Crm.Domain;
 using Crm.Application.DTO;
+using Crm.Application.DTO.Clients;
 
 namespace Crm.Application.Services
 {
@@ -59,6 +60,16 @@ namespace Crm.Application.Services
             };
             await _taskRepository.AddTaskAsync(addTask);
             return "Task Added Succesfully";
+        }
+        public async Task <IEnumerable<TaskDetailsDto>> AllArchiveTask()
+        {
+            var task = await _taskRepository.GetAllArchieveAsync();
+            if (task == null || !task.Any())
+                return new List<TaskDetailsDto>();
+
+            //calling the MapToClientsDto method to map the clients to ClientsDto
+            var clientsDto = task.Select(client => MapToDto(client)).ToList();
+            return clientsDto;
         }
 
         /*public async Task<string> UpdateTask(TaskDetailsDto task)

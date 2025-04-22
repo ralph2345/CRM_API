@@ -154,7 +154,7 @@ namespace Crm.Persistence.Repositories
             var comment = new Comments
             {
                 Content = content,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTimeOffset.UtcNow,
                 ClientDetailsId = clientDetails.ClientDetailsId
             };
 

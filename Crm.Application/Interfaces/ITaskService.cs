@@ -13,6 +13,7 @@ namespace Crm.Application.Interfaces
         Task<PaginatedResponse<TaskDetailsDto>> GetAllTask(TaskFilters filters, int pageNumber, int pageSize);
         //Task<TaskDetailsDto> GetTaskById(int id);
         Task <IEnumerable<TaskDetailsDto>> SearchTask(string? name);   
+        Task<IEnumerable<TaskDetailsDto>> AllArchiveTask();
         Task <string>AddTask(CreateTaskDto task);
         //Task <string>UpdateTask(TaskDetailsDto task);
         Task <string>IsArchivedTask(bool isArchived, int taskId);

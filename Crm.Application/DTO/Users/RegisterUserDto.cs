@@ -21,6 +21,7 @@ namespace Crm.Application.DTO.Users
         public required string LastName { get; set; }
 
         [Required(ErrorMessage = "Phone number is required.")]
+        [RegularExpression(@"^09\d{9}$", ErrorMessage = "Phone number must start with '09' and be exactly 11 digits.")]
         public required string PhoneNumber { get; set; }
 
         public required string Status { get; set; } = "Active";
@@ -29,6 +30,8 @@ namespace Crm.Application.DTO.Users
         public required string UserName { get; set; }
 
         [Required(ErrorMessage = "Email is required.")]
+
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Invalid email address format.")]
         public required string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]

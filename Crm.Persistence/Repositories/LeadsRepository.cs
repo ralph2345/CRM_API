@@ -23,7 +23,7 @@ namespace Crm.Persistence.Repositories
         public async Task<(IEnumerable<LeadTbl>, int)> GetAllLeadsAsync(int pageNumber, int pageSize)
         {
             var leadsQuery =  _context.LeadTbl
-                .Include(lead => lead.SalesRep)
+                .Include(lead => lead.DealTbl)
                 .Include(lead => lead.Payment)
                 .AsNoTracking();
 
@@ -42,14 +42,14 @@ namespace Crm.Persistence.Repositories
         {
 #pragma warning disable CS8603 // Possible null reference return.
             return await _context.LeadTbl
-                .Include(lead => lead.SalesRep)
+                .Include(lead => lead.DealTbl)
                 .Include(lead => lead.Payment)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(lead => lead.LeadId == id);
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task AddLeadAsync(LeadTbl lead, SalesRep sales, Payment payment)
+        public async Task AddLeadAsync(LeadTbl lead, DealTbl deals, Payment payment)
         {
             if (lead == null)
             {
@@ -58,10 +58,10 @@ namespace Crm.Persistence.Repositories
             await _context.LeadTbl.AddAsync(lead);
             await _context.SaveChangesAsync();
 
-            if (sales != null)
+            if (deals != null)
             {
-                sales.LeadId = lead.LeadId; // Set the foreign key relationship
-                await _context.SalesReps.AddAsync(sales);   
+                deals.LeadId = lead.LeadId; // Set the foreign key relationship
+                await _context.DealTbl.AddAsync(deals);   
             }
             if (payment != null)
             {

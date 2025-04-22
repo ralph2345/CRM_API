@@ -24,7 +24,7 @@ namespace Crm.Application.Services
         public async Task<PaginatedResponse<ClientsDto>> GetAllClientAsync(bool ascending, bool sortByRecentlyAdded, ClientFilters filters, int pageNumber, int pageSize)
         {
             var (clients, totalRecords) = await _clientRepository.GetAllClientsAsync(ascending, sortByRecentlyAdded, filters, pageNumber, pageSize);
-            
+
             if (clients == null || !clients.Any())
                 return new PaginatedResponse<ClientsDto>(new List<ClientsDto>(), totalRecords, pageNumber, pageSize);
 
@@ -34,7 +34,7 @@ namespace Crm.Application.Services
 
         public async Task<IEnumerable<ClientsDto>> GetClientInfoById(int clientId)
         {
-            var client= await _clientRepository.GetClientsByIdAsync(clientId);
+            var client = await _clientRepository.GetClientsByIdAsync(clientId);
             if (client == null)
                 return new List<ClientsDto>();
 
@@ -57,7 +57,7 @@ namespace Crm.Application.Services
         {
             var clients = await _clientRepository.SearchClientsAsync(name);
 
-            var clientsDto = clients.Select(client => MapToClientsDto(client)).ToList();
+            var clientsDto = clients.Select(client => MapToClientsDto(client, true)).ToList();
             return clientsDto;
 
         }
@@ -101,9 +101,10 @@ namespace Crm.Application.Services
             if (addClient.Details?.Notes != null && addClient.Details.Notes.Any())
             {
                 commentEntities = addClient.Details.Notes
-                    .Select(note => new Comments {
+                    .Select(note => new Comments
+                    {
                         Content = note,
-                        //CreatedAt = DateTime.UtcNow,
+                        CreatedAt = DateTimeOffset.UtcNow,
                     })
                     .ToList();
             }
@@ -139,48 +140,106 @@ namespace Crm.Application.Services
         public async Task<string> UpdateClientAsync(int clientId, UpdateClientsDto request)
         {
             var client = await _clientRepository.GetClientsByIdAsync(clientId);
-            if (client == null) { return "Client not found"; }
+            if (client == null)
+                return "Client not found";
 
-            client.PhotoLink = request.PhotoLink;
-            // Split FullName into FirstName, MiddleName, and LastName
-            var nameParts = request.FullName?.Split(' ');
-            client.FirstName = nameParts?.Length > 0 ? nameParts[0] : null;
-            client.MiddleName = nameParts?.Length > 2 ? nameParts[1] : null;
-            client.LastName = nameParts?.Length > 1 ? nameParts.Last() : null;
+            // Update photo if provided
+            if (!string.IsNullOrWhiteSpace(request.PhotoLink))
+                client.PhotoLink = request.PhotoLink;
 
-            client.PhoneNumber = request.PhoneNumber;
-            client.Email = request.Email;
-            client.WebsiteURL = request.WebsiteURL;
-
-            // Update Contact Person
-            if (client.ContactPerson != null && client.ContactPerson.Any())
+            if (!string.IsNullOrWhiteSpace(request.FullName))
             {
-                var contactPerson = client.ContactPerson.First();
-                contactPerson.ContactName = request.ContactName;
-                contactPerson.JobTitle = request.JobTitle;
-                contactPerson.Department = request.Department;
-                contactPerson.DirectEmail = request.DirectEmail;
-                contactPerson.DirectPhone = request.DirectPhoneNumber;
+                var nameParts = request.FullName
+                    .Trim()
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                client.FirstName = nameParts.ElementAtOrDefault(0);
+                client.MiddleName = nameParts.Length == 3 ? nameParts[1] : null;
+                client.LastName = nameParts.Length >= 2 ? nameParts.Last() : null;
             }
 
-            // Update company details
-            client.CompanyDetails.CompanyName = request.CompanyName;
-            client.CompanyDetails.IndustryType = request.IndustryType;
-            client.CompanyDetails.BusinessRegNumber = request.BusinessRegNumber;
-            client.CompanyDetails.CompanySize = request.CompanySize;
 
-            if (!string.IsNullOrEmpty(request.CompanyAddress))
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+                client.PhoneNumber = request.PhoneNumber;
+
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                client.Email = request.Email;
+
+            if (!string.IsNullOrWhiteSpace(request.WebsiteURL))
+                client.WebsiteURL = request.WebsiteURL;
+
+            // Update or add ContactPerson
+            if (!string.IsNullOrWhiteSpace(request.ContactName) ||
+                !string.IsNullOrWhiteSpace(request.JobTitle) ||
+                !string.IsNullOrWhiteSpace(request.Department) ||
+                !string.IsNullOrWhiteSpace(request.DirectEmail) ||
+                !string.IsNullOrWhiteSpace(request.DirectPhoneNumber))
             {
-                var addressParts = request.CompanyAddress.Split(',');
-                client.CompanyDetails.ZipCode = addressParts.Length > 2 ? addressParts[0].Trim() : null;
-                client.CompanyDetails.City = addressParts.Length > 0 ? addressParts[1].Trim() : null;
-                client.CompanyDetails.StateProvince = addressParts.Length > 1 ? addressParts[2].Trim() : null;
-                client.CompanyDetails.Country = addressParts.Length > 3 ? addressParts[3].Trim() : null;
+                if (client.ContactPerson != null && client.ContactPerson.Any())
+                {
+                    var contact = client.ContactPerson.First();
+                    if (!string.IsNullOrWhiteSpace(request.ContactName)) contact.ContactName = request.ContactName;
+                    if (!string.IsNullOrWhiteSpace(request.JobTitle)) contact.JobTitle = request.JobTitle;
+                    if (!string.IsNullOrWhiteSpace(request.Department)) contact.Department = request.Department;
+                    if (!string.IsNullOrWhiteSpace(request.DirectEmail)) contact.DirectEmail = request.DirectEmail;
+                    if (!string.IsNullOrWhiteSpace(request.DirectPhoneNumber)) contact.DirectPhone = request.DirectPhoneNumber;
+                }
+                else
+                {
+                    client.ContactPerson = new List<ContactPerson>
+                    {
+                        new ContactPerson
+                        {
+                            ContactName = request.ContactName,
+                            JobTitle = request.JobTitle,
+                            Department = request.Department,
+                            DirectEmail = request.DirectEmail,
+                            DirectPhone = request.DirectPhoneNumber
+                        }
+                    };
+                }
+            }
+
+            // Ensure company details exist
+            if (client.CompanyDetails == null)
+                client.CompanyDetails = new CompanyDetails();
+
+            if (!string.IsNullOrWhiteSpace(request.CompanyName))
+                client.CompanyDetails.CompanyName = request.CompanyName;
+
+            if (!string.IsNullOrWhiteSpace(request.IndustryType))
+                client.CompanyDetails.IndustryType = request.IndustryType;
+
+            if (!string.IsNullOrWhiteSpace(request.BusinessRegNumber))
+                client.CompanyDetails.BusinessRegNumber = request.BusinessRegNumber;
+
+            if (!string.IsNullOrWhiteSpace(request.CompanySize))
+                client.CompanyDetails.CompanySize = request.CompanySize;
+
+            //update address
+            if (!string.IsNullOrWhiteSpace(request.CompanyAddress))
+            {
+                var addressParts = request.CompanyAddress
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(part => part.Trim())
+                    .ToArray();
+
+                if (addressParts.Length < 4)
+                {
+                    return "Invalid company address format. Expected format: 'ZipCode, City, StateProvince, Country'";
+                }
+
+                client.CompanyDetails.ZipCode = addressParts.ElementAtOrDefault(0);
+                client.CompanyDetails.City = addressParts.ElementAtOrDefault(1);
+                client.CompanyDetails.StateProvince = addressParts.ElementAtOrDefault(2);
+                client.CompanyDetails.Country = addressParts.ElementAtOrDefault(3);
             }
 
             await _clientRepository.UpdateClientsAsync(client);
             return "Client updated successfully";
         }
+
+
 
         public async Task<string> IsArchivedClientAsync(bool isArchived, int clientId)
         {
@@ -234,8 +293,13 @@ namespace Crm.Application.Services
                 {
                     LeadSources = client.ClientDetails?.LeadSources,
                     ClientType = client.ClientDetails?.ClientType,
-                    Notes = client.ClientDetails?.Notes?.Select(n => n.Content).ToList()
-                };
+                    Notes = client.ClientDetails?.Notes?
+                        .Select(n => new NoteDto
+                        {
+                            Content = n.Content,
+                            CreatedAt = n.CreatedAt
+                        }).ToList(),
+                }; 
             }
 
             return dto;

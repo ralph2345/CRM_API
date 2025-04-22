@@ -13,10 +13,10 @@ namespace Crm.Application.Interfaces
     {
         Task<ApiResponseDto> RegisterAsync(RegisterUserDto request);
         Task<LoginResponseDto> LoginAsync(LoginUserDto request);
+
         //Task<IEnumerable<UserDto>> SearchUsersByNameAsync(string name);
         Task<IEnumerable<UserDto>> GetAllUsersAsync(string? searchName);
         Task<string> UpdateUserAsync(int userId, UpdateUserDto request);
-       
         Task<string> IsDeactivateUserAsync(bool isDeactivate,int userId);
         //Task<string> DeleteUserAsync(int userId);
         Task<ApiResponseDto> ForgotPasswordAsync(ForgotPasswordDto request);

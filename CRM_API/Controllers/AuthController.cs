@@ -35,8 +35,7 @@ namespace CRM_API.Controllers
                 photoLink = loginResponse.PhotoLink,
                 firstName = loginResponse.FirstName,
                 lastName = loginResponse.LastName,
-                email = loginResponse.Email,
-                rememberMe = request.RememberMe
+                email = loginResponse.Email,   
             });
         }
 

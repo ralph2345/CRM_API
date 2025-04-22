@@ -17,7 +17,7 @@ namespace Crm.Application.DTO.Clients
         [EmailAddress(ErrorMessage = "Invalid Email Address.")]
         public string? Email { get; set; }
 
-        [RegularExpression(@"^\+?[0-9]{10,11}$", ErrorMessage = "Invalid Phone Number.")]
+        [RegularExpression(@"^09\d{9}$", ErrorMessage = "Phone number must start with '09' and be exactly 11 digits.")]
         public string? PhoneNumber { get; set; }
         public string? WebsiteUrl { get; set; }
         public AddCompanyDto? Company { get; set; }
