@@ -13,8 +13,6 @@ namespace Crm.Domain.Entities
         [Key]
         public int Id { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public string? TaskID { get; private set; }//private set to prevent external modification
         public string? TaskTitle { get; set; }
         public string? TaskType { get; set; }
         public string? AssignedTo { get; set; }

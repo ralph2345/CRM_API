@@ -46,5 +46,20 @@ namespace CRM_API.Controllers
             return Created("", leads);
         }
 
+        [HttpPut("update-lead/{leadId}")]
+        public async Task<IActionResult> UpdateLeadAsync(int leadId, [FromBody] UpdateLeadsDto requestLeads)
+        {
+            if (requestLeads == null)
+            {
+                return BadRequest(new { message = "Invalid request data" });
+            }
+            var leads = await _leadService.UpdateLeadAsync(leadId, requestLeads);
+            if (leads == null || !leads.Any())
+            {
+                return NotFound("No lead found");
+            }
+            return Ok(leads);
+        }
+
     }
 }

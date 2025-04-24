@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crm.Application.DTO;
+﻿using Crm.Application.DTO;
 using Crm.Application.DTO.Leads;
 
 namespace Crm.Application.Interfaces
@@ -13,7 +8,7 @@ namespace Crm.Application.Interfaces
         Task<PaginatedResponse<LeadsDto>> GetAllLeadsAsync(int pageNumber, int pageSize);
         Task<IEnumerable<LeadsDto>> GetLeadByIdAsync(int id);
         Task<string> AddLeadAsync(AddLeadsDto lead);
-        //Task UpdateLeadAsync(LeadsDto lead);
+        Task<string> UpdateLeadAsync(int leadId, UpdateLeadsDto update);
         //Task DeleteLeadAsync(int id);
     }
 }

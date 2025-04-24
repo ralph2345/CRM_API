@@ -6,6 +6,7 @@ using Crm.Domain.Interfaces;
 using Crm.Application.Interfaces;
 using Crm.Domain.Entities;
 using Crm.Application.DTO;
+using Azure.Core;
 
 namespace Crm.Application.Services
 {
@@ -108,6 +109,70 @@ namespace Crm.Application.Services
             await _leadsRepository.AddLeadAsync(leadEntity, deals, payment);
             return "Lead added successfully";
 
+        }
+
+        public async Task<string> UpdateLeadAsync(int leadId, UpdateLeadsDto update)
+        {
+            var lead = await _leadsRepository.GetLeadByIdAsync(leadId);
+            if (lead == null) { return "Lead not found"; }
+
+            UpdateLead(lead, update);
+            UpdateDeal(lead.DealTbl ??= new DealTbl(), update);
+            UpdatePayment(lead.Payment ??= new Payment(), update);
+
+            await _leadsRepository.UpdateLeadAsync(lead);
+            return "Lead updated successfully";
+        }
+
+        private void UpdateLead(LeadTbl lead, UpdateLeadsDto update)
+        {
+            if (!string.IsNullOrWhiteSpace(update.LeadSource))
+                lead.LeadSource = update.LeadSource;
+
+            if (!string.IsNullOrWhiteSpace(update.Status))
+                lead.Status = update.Status;
+        }
+
+        private void UpdateDeal(DealTbl deal, UpdateLeadsDto update)
+        {
+            if (!string.IsNullOrEmpty(update.Currency))
+                deal.Currency = update.Currency;
+
+            if (!string.IsNullOrEmpty(update.DealName))
+                deal.DealName = update.DealName;
+
+            if (update.DealValue.HasValue && update.DealValue > 0)
+                deal.DealValue = update.DealValue;
+
+            if (!string.IsNullOrEmpty(update.Stage))
+                deal.Stage = update.Stage;
+
+            if (!string.IsNullOrEmpty(update.AssignedSalesRep))
+                deal.AssignedSalesRep = update.AssignedSalesRep;
+
+            if (!string.IsNullOrEmpty(update.DealStatus))
+                deal.Status = update.DealStatus;
+        }
+
+        private void UpdatePayment(Payment payment, UpdateLeadsDto update)
+        {
+            if (update.EstimatedValue.HasValue && update.EstimatedValue > 0)
+                payment.EstimatedValue = update.EstimatedValue;
+
+            if (update.Discount.HasValue && update.Discount > 0)
+                payment.Discount = update.Discount;
+
+            // Calculate total price
+            payment.TotalPrice = CalculateTotalPrice(payment.EstimatedValue, payment.Discount);
+
+            if (!string.IsNullOrEmpty(update.PaymentTerms))
+                payment.PaymentTerms = update.PaymentTerms;
+
+            if (!string.IsNullOrEmpty(update.InvoiceNumber))
+                payment.InvoiceNumber = update.InvoiceNumber;
+
+            if (!string.IsNullOrEmpty(update.PaymentStatus))
+                payment.PaymentStatus = update.PaymentStatus;
         }
 
         private decimal CalculateTotalPrice(decimal? price, decimal? discount)

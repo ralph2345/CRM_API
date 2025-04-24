@@ -15,7 +15,7 @@ namespace Crm.Application.Interfaces
     public interface IClientService
     {
         Task<PaginatedResponse<ClientsDto>> GetAllClientAsync(bool ascending, bool sortByRecentlyAdded, ClientFilters filters, int pageNumber, int pageSize);
-        Task<IEnumerable<ClientsDto>> GetAllArchieveClientAsync();
+        Task<IEnumerable<ClientsDto>> GetAllArchiveClientAsync();
         Task<IEnumerable<ClientsDto>> GetClientInfoById(int clientId);
         Task<IEnumerable<ClientsDto>> SearchClientAsync(string? name);
         Task<string> AddClientAsync(AddClientsDto addClient);

@@ -23,9 +23,9 @@ namespace Crm.Application.Services
             _taskRepository = taskRepository;
         }
 
-        public async Task<PaginatedResponse<TaskDetailsDto>> GetAllTask(TaskFilters filters, int pageNumber, int pageSize)
+        public async Task<PaginatedResponse<TaskDetailsDto>> GetAllTask(bool ascending, TaskFilters filters, int pageNumber, int pageSize)
         {
-            var (task, totalRecords) = await _taskRepository.GetAllTaskAsync(filters, pageNumber, pageSize);
+            var (task, totalRecords) = await _taskRepository.GetAllTaskAsync(ascending, filters, pageNumber, pageSize);
 
             if (task == null || !task.Any())
                 return new PaginatedResponse<TaskDetailsDto>(new List<TaskDetailsDto>(), totalRecords, pageNumber, pageSize);
@@ -59,7 +59,7 @@ namespace Crm.Application.Services
                 ClientID = task.ClientID,
             };
             await _taskRepository.AddTaskAsync(addTask);
-            return "Task Added Succesfully";
+            return "Task Added Successfully";
         }
         public async Task <IEnumerable<TaskDetailsDto>> AllArchiveTask()
         {
@@ -86,7 +86,7 @@ namespace Crm.Application.Services
             taskToUpdate.Status = task.Status;
 
             await _taskRepository.UpdateTaskAsync(taskToUpdate);
-            return "Task Updated Succesfully";
+            return "Task Updated Successfully";
         }*/
 
         public async Task<string> IsArchivedTask(bool isArchived, int taskId)
@@ -98,12 +98,12 @@ namespace Crm.Application.Services
             if (isArchived == true)
             {
                 taskToDelete.IsArchived = true;
-                return "Task Archived Succesfully";
+                return "Task Archived Successfully";
             }
             else
             {
                 taskToDelete.IsArchived = false;
-                return "Task Unarchived Succesfully";
+                return "Task Unarchived Successfully";
             }
 
         }
@@ -112,7 +112,6 @@ namespace Crm.Application.Services
             return new TaskDetailsDto
             {
                 Id = lead.Id,
-                TaskID = lead.TaskID,
                 TaskTitle = lead.TaskTitle,
                 TaskType = lead.TaskType,
                 AssignedTo = lead.Clients != null ? $"{lead.Clients.FirstName} {lead.Clients.MiddleName} {lead.Clients.LastName}" : "Unknown",

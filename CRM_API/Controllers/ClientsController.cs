@@ -23,8 +23,8 @@ namespace CRM_API.Controllers
         public async Task<IActionResult> GetAllClients(
             [FromQuery] int pageNumber,
             [FromQuery] int pageSize,
-            [FromQuery] bool ascending = true,
-            [FromQuery] bool sortByRecentlyAdded = false,
+            [FromQuery] bool ascending,
+            [FromQuery] bool sortByRecentlyAdded,
             [FromQuery] string? industryType = null,
             [FromQuery] string? leadSource = null
             )
@@ -49,9 +49,9 @@ namespace CRM_API.Controllers
         }
 
         [HttpGet("all-archieve-clients")]
-        public async Task<IActionResult> GetAllArchieveClients()
+        public async Task<IActionResult> GetAllArchiveClients()
         {
-            var clients = await _clientService.GetAllArchieveClientAsync();
+            var clients = await _clientService.GetAllArchiveClientAsync();
             if (clients == null || !clients.Any()) { return NotFound("No archieve clients"); }
             return Ok(clients);
         }

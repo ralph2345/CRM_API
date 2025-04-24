@@ -10,7 +10,7 @@ namespace Crm.Application.Interfaces
 {
     public interface ITaskService
     {
-        Task<PaginatedResponse<TaskDetailsDto>> GetAllTask(TaskFilters filters, int pageNumber, int pageSize);
+        Task<PaginatedResponse<TaskDetailsDto>> GetAllTask(bool ascending, TaskFilters filters, int pageNumber, int pageSize);
         //Task<TaskDetailsDto> GetTaskById(int id);
         Task <IEnumerable<TaskDetailsDto>> SearchTask(string? name);   
         Task<IEnumerable<TaskDetailsDto>> AllArchiveTask();

@@ -19,7 +19,7 @@ namespace Crm.Persistence.Repositories
             _context = context;
         }
 
-        public async Task<(IEnumerable<TaskDetails>, int)> GetAllTaskAsync(TaskFilters filters, int pageNumber, int pageSize)
+        public async Task<(IEnumerable<TaskDetails>, int)> GetAllTaskAsync(bool ascending, TaskFilters filters, int pageNumber, int pageSize)
         {
             var query = _context.TaskDetails
                 .Where(t => t.IsArchived == false || t.IsArchived == null)
@@ -52,8 +52,10 @@ namespace Crm.Persistence.Repositories
                     query = query.Where(t => t.DueDate.HasValue && t.DueDate <= filters.EndDate.Value);
                 }
 
-
             }
+
+            //apply sorting
+            query = ascending ? query.OrderBy(t => t.TaskTitle) : query.OrderByDescending(t => t.TaskTitle);
 
             int totalRecords = await query.CountAsync();  // Get total count before pagination
 

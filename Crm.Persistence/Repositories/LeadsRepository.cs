@@ -71,5 +71,11 @@ namespace Crm.Persistence.Repositories
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task UpdateLeadAsync(LeadTbl lead)
+        {
+            _context.LeadTbl.Update(lead);
+            await _context.SaveChangesAsync();
+        }
     }
 }

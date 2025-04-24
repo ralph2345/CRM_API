@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Crm.Application.DTO;
 using Crm.Application.DTO.Clients;
-using Crm.Domain.Entities;
-using Crm.Domain.Interfaces;
 using Crm.Application.Interfaces;
 using Crm.Domain;
-using Crm.Application.DTO;
+using Crm.Domain.Entities;
+using Crm.Domain.Interfaces;
 
 namespace Crm.Application.Services
 {
@@ -41,7 +36,7 @@ namespace Crm.Application.Services
             return new List<ClientsDto> { MapToClientsDto(client, true) };
         }
 
-        public async Task<IEnumerable<ClientsDto>> GetAllArchieveClientAsync()
+        public async Task<IEnumerable<ClientsDto>> GetAllArchiveClientAsync()
         {
             var clients = await _clientRepository.GetAllArchieveAsync();
             if (clients == null || !clients.Any())
@@ -168,7 +163,7 @@ namespace Crm.Application.Services
             if (!string.IsNullOrWhiteSpace(request.WebsiteURL))
                 client.WebsiteURL = request.WebsiteURL;
 
-            // Update or add ContactPerson
+            // Update ContactPerson
             if (!string.IsNullOrWhiteSpace(request.ContactName) ||
                 !string.IsNullOrWhiteSpace(request.JobTitle) ||
                 !string.IsNullOrWhiteSpace(request.Department) ||
@@ -299,61 +294,11 @@ namespace Crm.Application.Services
                             Content = n.Content,
                             CreatedAt = n.CreatedAt
                         }).ToList(),
-                }; 
+                };
             }
 
             return dto;
         }
-
-
-        /*public async Task<string> UnarchivedClientAsync(int clientId)
-        {
-            var client = await _clientRepository.GetClientsByIdAsync(clientId);
-            if (client == null) { return "Client not found"; }
-
-            client.IsArchived = false;
-            await _clientRepository.UnarchivedClientsAsync(client);
-            return "Client unarchived successfully";
-        }*/
-
-        /*public async Task<IEnumerable<ClientsDto>> GetRecentlyAddedClientAsync()
-        {
-            var clients = await _clientRepository.GetRecentlyAddedClientsAsync();
-            return clients.Select(clients => new ClientsDto
-            {
-                ClientId = clients.ClientID,
-                FullName = $"{clients.FirstName} {clients.MiddleName} {clients.LastName}",
-                PhoneNumber = clients.PhoneNumber,
-                Email = clients.Email,
-                CompanyName = clients.CompanyDetails?.CompanyName,
-            }).ToList();
-        }
-        public async Task<IEnumerable<ClientsDto>> GetClientSortedByNameAsync(bool ascending)
-        {
-            var clients = await _clientRepository.GetClientsSortedByNameAsync(ascending);
-            return clients.Select(clients => new ClientsDto
-            {
-                ClientId = clients.ClientID,
-                FullName = $"{clients.FirstName} {clients.MiddleName} {clients.LastName}",
-                PhoneNumber = clients.PhoneNumber,
-                Email = clients.Email,
-                CompanyName = clients.CompanyDetails?.CompanyName
-            }).ToList();
-        }
-
-        public async Task<IEnumerable<ClientsDto>> GetClientByIndustryAsync(string industryType)
-        {
-            var clients = await _clientRepository.GetClientsByIndustryAsync(industryType);
-            return clients.Select(clients => new ClientsDto
-            {
-                ClientId = clients.ClientID,
-                FullName = $"{clients.FirstName} {clients.MiddleName} {clients.LastName}",
-                PhoneNumber = clients.PhoneNumber,
-                Email = clients.Email,
-                CompanyName = clients.CompanyDetails?.CompanyName,
-
-            }).ToList();
-        }*/
 
     }
 }

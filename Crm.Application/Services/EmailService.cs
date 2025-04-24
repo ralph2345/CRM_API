@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Net;
 using System.Net.Mail;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Crm.Application.Interfaces;
-using System.Text.Unicode;
+using Microsoft.Extensions.Configuration;
 
 namespace Crm.Application.Services
 {
@@ -27,8 +21,8 @@ namespace Crm.Application.Services
                 {
                     smtpClient.Port = int.Parse(_configuration["Email:SmtpPort"]);
                     smtpClient.Credentials = new NetworkCredential(
-                        _configuration["Email:Username"],  
-                        _configuration["Email:Password"]  
+                        _configuration["Email:Username"],
+                        _configuration["Email:Password"]
                     );
                     smtpClient.EnableSsl = true;
 
@@ -61,7 +55,7 @@ namespace Crm.Application.Services
 
                         // Send Email
                         await smtpClient.SendMailAsync(mailMessage);
-                        
+
                     }
                 }
             }

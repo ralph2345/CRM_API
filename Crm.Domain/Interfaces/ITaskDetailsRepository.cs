@@ -9,7 +9,7 @@ namespace Crm.Domain.Interfaces
 {
     public interface ITaskDetailsRepository
     {
-        Task<(IEnumerable<TaskDetails>, int)> GetAllTaskAsync(TaskFilters filters,int pageNumber, int pageSize);
+        Task<(IEnumerable<TaskDetails>, int)> GetAllTaskAsync(bool ascending, TaskFilters filters,int pageNumber, int pageSize);
         Task <TaskDetails> GetTaskByIdAsync(int id);
         Task <IEnumerable<TaskDetails>> GetAllArchieveAsync();
         Task <List<TaskDetails>> SearchTaskAsync(string? name);

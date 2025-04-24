@@ -21,11 +21,12 @@ namespace CRM_API.Controllers
         }
 
         [HttpGet("all-tasks")]
-        public async Task<IActionResult> GetAllTasks([FromQuery] TaskFilters filters
+        public async Task<IActionResult> GetAllTasks([FromQuery] bool ascending
+            ,[FromQuery] TaskFilters filters
             ,[FromQuery] int pageNumber
             ,[FromQuery] int pageSize)
         {
-            var tasks = await _taskService.GetAllTask(filters, pageNumber, pageSize);
+            var tasks = await _taskService.GetAllTask(ascending, filters, pageNumber, pageSize);
             if (tasks == null ||!tasks.Items.Any()) { return NotFound(); }
             return Ok(tasks);
         }
