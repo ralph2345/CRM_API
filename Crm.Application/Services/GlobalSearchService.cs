@@ -22,7 +22,7 @@ namespace Crm.Application.Services
 
         public async Task<IEnumerable<GlobalSearchResultDto>> SearchAll(string search)
         {
-            var (clients, users) = await _globalSearchRepository.SearchAsync(search);
+            var(clients, users) = await _globalSearchRepository.SearchAsync(search);
 
             var clientResults = clients.Select(client => new GlobalSearchResultDto
             {
@@ -39,7 +39,7 @@ namespace Crm.Application.Services
                 FullName = $"{user.FirstName} {user.MiddleName} {user.LastName}",
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
-            });
+            });  
 
             return clientResults.Concat(userResults);
         }

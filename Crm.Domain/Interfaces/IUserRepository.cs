@@ -11,13 +11,14 @@ namespace Crm.Domain.Interfaces
     {
         Task<bool> UserExistsAsync(string email);
         Task<Users> GetUserByIdAsync(int userId);
+        Task <List<Users>> GetMultipleUserByIdAsync(List<int> userId);
         Task<Users> GetUserByUsernameAsync(string? username);
         //Task<IEnumerable<Users>> SearchUsersByNameAsync(string name);   
         Task<IEnumerable<Users>> GetAllUsersAsync(string searchName);
         Task AddUserAsync(Users user);
         Task UpdateUserAsync(Users user);   
         //Task DeleteUserAsync(Users user);
-        Task IsDeactivateUserAsync(bool isDeactivate, int userId);
+        Task IsDeactivateUserAsync(bool isDeactivate, List<int> userId);
         Task<Users?> GetUserByEmailAsync(string email);
         
     }

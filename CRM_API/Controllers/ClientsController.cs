@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Crm.Application.Interfaces;
 using Crm.Application.DTO.Clients;
 using Crm.Domain;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace CRM_API.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = "Basic", Policy ="ApiKey")]
     [Route("api/[controller]")]
     [ApiController]
     public class ClientsController : ControllerBase
@@ -48,7 +49,7 @@ namespace CRM_API.Controllers
             return Ok(client);
         }
 
-        [HttpGet("all-archieve-clients")]
+        [HttpGet("all-archive-clients")]
         public async Task<IActionResult> GetAllArchiveClients()
         {
             var clients = await _clientService.GetAllArchiveClientAsync();
@@ -93,7 +94,7 @@ namespace CRM_API.Controllers
         {
             var response = await _clientService.AddCommentsToClientAsync(clientId, content);
             if (response == null) { return BadRequest(new {Message = $"Unable to add comment please check your added notes"}); }
-            return Created("",response);
+            return Created("",response);        
         }
 
         [HttpPut("update-client/{clientId}")]
@@ -115,7 +116,7 @@ namespace CRM_API.Controllers
         }
 
         [HttpPut("is-archived-client")]
-        public async Task<IActionResult> ArchivedClient([FromQuery]bool isArchived,[FromQuery] int clientId)
+        public async Task<IActionResult> ArchivedClient([FromQuery]bool isArchived,[FromQuery]List<int> clientId)
         {
             var response = await _clientService.IsArchivedClientAsync(isArchived, clientId);
             if (response == null) { return BadRequest(response); }

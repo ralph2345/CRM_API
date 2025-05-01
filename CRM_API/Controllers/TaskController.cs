@@ -8,7 +8,7 @@ using Crm.Domain;
 
 namespace CRM_API.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = "Basic", Policy = "ApiKey")]
     [Route("api/[controller]")]
     [ApiController]
     public class TaskController : ControllerBase
@@ -64,7 +64,7 @@ namespace CRM_API.Controllers
         }*/
 
         [HttpPut("is-archive-task")]
-        public async Task<IActionResult> ArchiveTask([FromQuery] bool isArchived, [FromQuery] int taskId)
+        public async Task<IActionResult> ArchiveTask([FromQuery] bool isArchived, [FromQuery] List<int> taskId)
         {
             var results = await _taskService.IsArchivedTask(isArchived, taskId);
             if(results == null) { return NotFound(new {Message = $"No task found for archival"}); }

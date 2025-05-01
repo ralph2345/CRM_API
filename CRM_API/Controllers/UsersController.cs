@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CRM_API.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = "Basic", Policy = "ApiKey")]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -19,9 +19,9 @@ namespace CRM_API.Controllers
         }
 
         [HttpGet("all-users")]
-        public async Task<IActionResult> GetAllUsers(string? searchName)
+        public async Task<IActionResult> GetAllUsers(string? search)
         {
-            var users = await _userService.GetAllUsersAsync(searchName);
+            var users = await _userService.GetAllUsersAsync(search);
             if (users == null || !users.Any())
             {
                 return NotFound("No users found");
@@ -74,8 +74,8 @@ namespace CRM_API.Controllers
             return Ok(new {message = result });
         }
 
-        [HttpPut("is-deactivate/{userId}")]
-        public async Task<IActionResult> DeactivateUser([FromQuery]bool isDeactivate, int userId)
+        [HttpPut("v2/is-deactivate")]
+        public async Task<IActionResult> DeactivateUser([FromQuery]bool isDeactivate,[FromQuery]List<int> userId)
         {
             var result = await _userService.IsDeactivateUserAsync(isDeactivate, userId);
             if (result == "User not found")

@@ -17,7 +17,7 @@ namespace Crm.Application.Interfaces
         //Task<IEnumerable<UserDto>> SearchUsersByNameAsync(string name);
         Task<IEnumerable<UserDto>> GetAllUsersAsync(string? searchName);
         Task<string> UpdateUserAsync(int userId, UpdateUserDto request);
-        Task<string> IsDeactivateUserAsync(bool isDeactivate,int userId);
+        Task<string> IsDeactivateUserAsync(bool isDeactivate,List<int> userId);
         //Task<string> DeleteUserAsync(int userId);
         Task<ApiResponseDto> ForgotPasswordAsync(ForgotPasswordDto request);
         Task<ApiResponseDto> ResetPasswordAsync(ResetPasswordDto request);

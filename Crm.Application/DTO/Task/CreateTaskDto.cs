@@ -11,8 +11,8 @@ namespace Crm.Application.DTO.Task
         public string? TaskTitle { get; set; }
         public string? TaskType { get; set; }
 
-        // Use ClientID to associate with a client
-        public int ClientID { get; set; }
+        // Use ClientId to associate with a client
+        public int ClientId { get; set; }
 
         public string? Priority { get; set; }
         public DateTime? DueDate { get; set; }

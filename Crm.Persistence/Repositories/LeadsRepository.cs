@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crm.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Crm.Domain.Entities;
 using Crm.Domain.Interfaces;
-using Crm.Domain;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crm.Persistence.Repositories
 {
@@ -22,7 +15,7 @@ namespace Crm.Persistence.Repositories
 
         public async Task<(IEnumerable<LeadTbl>, int)> GetAllLeadsAsync(int pageNumber, int pageSize)
         {
-            var leadsQuery =  _context.LeadTbl
+            var leadsQuery = _context.LeadTbl
                 .Include(lead => lead.DealTbl)
                 .Include(lead => lead.Payment)
                 .AsNoTracking();
@@ -49,6 +42,20 @@ namespace Crm.Persistence.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
+        public async Task<IEnumerable<LeadTbl>> SearchLeadAsync(string search)
+        {
+            if (string.IsNullOrEmpty(search))
+                return new List<LeadTbl>();
+
+            // Searching by names and company names
+            return await _context.LeadTbl
+                .Where(leads =>
+                    EF.Functions.Like(leads.FullName, $"%{search}%") ||
+                    (leads.CompanyName != null && EF.Functions.Like(leads.CompanyName, $"%{search}%")) ||
+                    (leads.Email != null && EF.Functions.Like(leads.Email, $"%{search}%"))
+                )
+                .ToListAsync();
+        }
         public async Task AddLeadAsync(LeadTbl lead, DealTbl deals, Payment payment)
         {
             if (lead == null)
@@ -61,7 +68,7 @@ namespace Crm.Persistence.Repositories
             if (deals != null)
             {
                 deals.LeadId = lead.LeadId; // Set the foreign key relationship
-                await _context.DealTbl.AddAsync(deals);   
+                await _context.DealTbl.AddAsync(deals);
             }
             if (payment != null)
             {

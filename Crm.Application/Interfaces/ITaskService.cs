@@ -16,6 +16,6 @@ namespace Crm.Application.Interfaces
         Task<IEnumerable<TaskDetailsDto>> AllArchiveTask();
         Task <string>AddTask(CreateTaskDto task);
         //Task <string>UpdateTask(TaskDetailsDto task);
-        Task <string>IsArchivedTask(bool isArchived, int taskId);
+        Task <string>IsArchivedTask(bool isArchived, List<int> taskId);
     }
 }

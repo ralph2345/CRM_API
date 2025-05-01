@@ -30,6 +30,13 @@ namespace Crm.Persistence.Repositories
             return await _context.Users.FindAsync(userId);
         }
 
+        public async Task<List<Users>> GetMultipleUserByIdAsync(List<int> userId)
+        {
+            return await _context.Users
+                .Where(u => userId.Contains(u.UserId))
+                .ToListAsync();
+        }
+
         /*public async Task<IEnumerable<Users>> SearchUsersByNameAsync(string name)
         {
             //searching users through their full names
@@ -49,7 +56,10 @@ namespace Crm.Persistence.Repositories
                 query = query.Where(u =>
                     u.FirstName.Contains(searchName) ||
                     u.MiddleName.Contains(searchName) ||
-                    u.LastName.Contains(searchName));
+                    u.LastName.Contains(searchName) ||
+                    u.UserName.Contains(searchName) ||
+                    u.PhoneNumber.Contains(searchName) ||
+                    u.Email.Contains(searchName));
             }
 
             return await query.ToListAsync();
@@ -73,14 +83,24 @@ namespace Crm.Persistence.Repositories
             await _context.SaveChangesAsync();  
         }
 
-        public async Task IsDeactivateUserAsync(bool isDeactivate, int userId)
+        public async Task IsDeactivateUserAsync(bool isDeactivate, List<int> userIds)
         {
-            var user = await GetUserByIdAsync(userId);
-            if (user != null)
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.UserId))
+                .ToListAsync();
+
+            if (!users.Any())
+            {
+                throw new Exception("Users not found");
+            }
+
+            foreach (var user in users)
             {
                 user.Status = isDeactivate ? "Inactive" : "Active";
-                await UpdateUserAsync(user);
             }
+
+            _context.Users.UpdateRange(users); //Can deactivate multiple users at once
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Users?> GetUserByEmailAsync(string email)

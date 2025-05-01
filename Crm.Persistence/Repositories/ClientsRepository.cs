@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crm.Domain.Interfaces;
+﻿using Crm.Domain;
 using Crm.Domain.Entities;
+using Crm.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Crm.Domain;
 
 namespace Crm.Persistence.Repositories
 {
@@ -99,12 +94,24 @@ namespace Crm.Persistence.Repositories
         {
 #pragma warning disable CS8603 // Possible null reference return.
             return await _context.Clients
+                .Where(client => !client.IsArchived)//not archived clients
                 .Include(c => c.CompanyDetails) // Load company details
                 .Include(c => c.ContactPerson)  // Load contact person
                 .Include(c => c.ClientDetails) // Load client details
                 .ThenInclude(cd => cd.Notes) // Load client notes
                 .FirstOrDefaultAsync(c => c.ClientID == clientId);
 #pragma warning restore CS8603 // Possible null reference return.
+        }
+
+        public async Task<List<Clients>> GetMultipleClientsByIdAsync(List<int> clientId)
+        {
+            return await _context.Clients
+                .Include(c => c.CompanyDetails) // Load company details
+                .Include(c => c.ContactPerson)  // Load contact person
+                .Include(c => c.ClientDetails) // Load client details
+                .ThenInclude(cd => cd.Notes) // Load client notes
+                .Where(c => clientId.Contains(c.ClientID))
+                .ToListAsync();
         }
 
         public async Task AddClientsAsync(Clients clients, CompanyDetails? company, List<ContactPerson>? contact, ClientDetails? clientDetails)
@@ -131,7 +138,7 @@ namespace Crm.Persistence.Repositories
             if (clientDetails != null)
             {
                 clientDetails.ClientID = clients.ClientID;
-                if(clientDetails.Notes != null && clientDetails.Notes.Any())
+                if (clientDetails.Notes != null && clientDetails.Notes.Any())
                 {
                     foreach (var note in clientDetails.Notes)
                     {
@@ -168,60 +175,27 @@ namespace Crm.Persistence.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task IsArchivedClientsAsync(bool isArchived, int id)
+        public async Task IsArchivedClientsAsync(bool isArchived, List<int> ids)
         {
-            var clients = await _context.Clients.FindAsync(id);
-            if (clients == null) { throw new Exception("Not Found"); }
+            var clients = await _context.Clients
+                .Where(c => ids.Contains(c.ClientID))
+                .ToListAsync(); // Retrieve multiple clients
 
-            clients.IsArchived = isArchived;
-            _context.Clients.Update(clients);
+            if (!clients.Any()) { throw new Exception("Not Found"); }
+
+            foreach (var client in clients)
+            {
+                client.IsArchived = isArchived;
+            }
+
+            _context.Clients.UpdateRange(clients); // Use UpdateRange for multiple entities
             await _context.SaveChangesAsync();
         }
 
-        /*public async Task UnarchivedClientsAsync(Clients clients)
-        {
-            clients.IsArchived = false;
-            _context.Clients.Update(clients);
-            await _context.SaveChangesAsync();
-        }*/
 
-       /* public async Task<IEnumerable<Clients>> GetRecentlyAddedClientsAsync()
-        {
-            return await _context.Clients
-                .Include(client => client.CompanyDetails)
-                .Include(client => client.ContactPerson)
-                .Include(client => client.ClientDetails)
-                .Where(client => !client.IsArchived)// Only active clients will fetch
-                .OrderByDescending(client => client.DateCreated) // Sort by most recently added
-                .ToListAsync();
-        }
 
-        public async Task<IEnumerable<Clients>> GetClientsSortedByNameAsync(bool ascending)
-        {
-            var query = _context.Clients
-                .Where(client => !client.IsArchived)
-                .Include(client => client.CompanyDetails)
-                .Include(client => client.ContactPerson)
-                .Include(client => client.ClientDetails)
-                .AsNoTracking(); // Ensure optimized read-only queries
 
-            // Apply sorting before executing the query
-            query = ascending
-                ? query.OrderBy(client => client.FirstName)  // A-Z sorting
-                : query.OrderByDescending(client => client.FirstName);  // Z-A sorting
 
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Clients>> GetClientsByIndustryAsync(string industryType)
-        {
-            return await _context.Clients
-                .Include(client => client.CompanyDetails)
-                .Include(client => client.ContactPerson)
-                .Include(client => client.ClientDetails)
-                .Where(client => client.CompanyDetails.IndustryType == industryType)
-                .ToListAsync();
-        }*/
 
     }
 }

@@ -236,9 +236,9 @@ namespace Crm.Application.Services
 
 
 
-        public async Task<string> IsArchivedClientAsync(bool isArchived, int clientId)
+        public async Task<string> IsArchivedClientAsync(bool isArchived, List<int> clientId)
         {
-            var client = await _clientRepository.GetClientsByIdAsync(clientId);
+            var client = await _clientRepository.GetMultipleClientsByIdAsync(clientId);
             if (client == null) { return "Client not found"; }
             await _clientRepository.IsArchivedClientsAsync(isArchived, clientId);
 
@@ -249,8 +249,8 @@ namespace Crm.Application.Services
             else
             {
                 return "Client unarchived successfully";
-
             }
+
         }
 
         private ClientsDto MapToClientsDto(Clients client, bool includeDetails = false)

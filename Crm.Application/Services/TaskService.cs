@@ -45,7 +45,7 @@ namespace Crm.Application.Services
 
         public async Task<string> AddTask(CreateTaskDto task)
         {
-            var assignedTo = await _taskRepository.GetClientFullNameAsync(task.ClientID);
+            var assignedTo = await _taskRepository.GetClientFullNameAsync(task.ClientId);
             if (assignedTo == null) return "Client not found";
 
             var addTask = new TaskDetails
@@ -56,7 +56,7 @@ namespace Crm.Application.Services
                 Priority = task.Priority,
                 DueDate = task.DueDate,
                 Status = task.Status,
-                ClientID = task.ClientID,
+                ClientID = task.ClientId,
             };
             await _taskRepository.AddTaskAsync(addTask);
             return "Task Added Successfully";
@@ -72,40 +72,23 @@ namespace Crm.Application.Services
             return clientsDto;
         }
 
-        /*public async Task<string> UpdateTask(TaskDetailsDto task)
+        
+
+        public async Task<string> IsArchivedTask(bool isArchived, List<int> taskIds)
         {
-            var taskToUpdate = await _taskRepository.GetTaskByIdAsync(task.Id);
-            if (taskToUpdate == null) throw new Exception("Task not found");
+            var tasksToArchive = await _taskRepository.GetTaskByIdAsync(taskIds); // This should return a List<TaskDetails>
 
-            // Update the task
-            //taskToUpdate.TaskID = task.TaskID;
-            taskToUpdate.TaskTitle = task.TaskTitle;
-            taskToUpdate.TaskType = task.TaskType;
-            taskToUpdate.Priority = task.Priority;
-            taskToUpdate.DueDate = task.DueDate;
-            taskToUpdate.Status = task.Status;
+            if (tasksToArchive == null || !tasksToArchive.Any())
+                throw new Exception("No tasks found");
 
-            await _taskRepository.UpdateTaskAsync(taskToUpdate);
-            return "Task Updated Successfully";
-        }*/
-
-        public async Task<string> IsArchivedTask(bool isArchived, int taskId)
-        {
-            var taskToDelete = await _taskRepository.GetTaskByIdAsync(taskId);
-            if (taskToDelete == null) throw new Exception("Task not found");
-
-            await _taskRepository.IsArchivedTaskAsync(isArchived, taskId);
-            if (isArchived == true)
+            foreach (var task in tasksToArchive)
             {
-                taskToDelete.IsArchived = true;
-                return "Task Archived Successfully";
-            }
-            else
-            {
-                taskToDelete.IsArchived = false;
-                return "Task Unarchived Successfully";
+                task.IsArchived = isArchived;
             }
 
+            await _taskRepository.UpdateTaskAsync(tasksToArchive);
+
+            return isArchived ? "Tasks Archived Successfully" : "Tasks Unarchived Successfully";
         }
         private TaskDetailsDto MapToDto(TaskDetails lead)
         {

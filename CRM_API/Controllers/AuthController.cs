@@ -7,7 +7,7 @@ using Crm.Application.DTO.Login;
 
 namespace CRM_API.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = "Basic", Policy = "ApiKey")]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase

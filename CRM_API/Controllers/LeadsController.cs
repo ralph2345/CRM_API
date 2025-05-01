@@ -6,7 +6,7 @@ using Crm.Application.DTO.Leads;
 
 namespace CRM_API.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = "Basic", Policy = "ApiKey")]
     [Route("api/[controller]")]
     [ApiController]
     public class LeadsController : ControllerBase
@@ -18,7 +18,7 @@ namespace CRM_API.Controllers
             _leadService = leadService;
         }
         [HttpGet("all-leads")]
-        public async Task<IActionResult> GetAllLeadsAsync([FromQuery] int pageNumber, [FromQuery] int pageSize)
+        public async Task<IActionResult> GetAllLeadsAsync([FromQuery] int pageNumber, int pageSize)
         {
             var leads = await _leadService.GetAllLeadsAsync(pageNumber, pageSize);
             return Ok(leads);
@@ -35,6 +35,17 @@ namespace CRM_API.Controllers
             return Ok(lead);
         }
 
+        [HttpGet("search-lead")]
+        public async Task<IActionResult> SearchLeadAsync([FromQuery] string name)
+        {
+            var lead = await _leadService.SearchLeadsAsync(name);
+            if (lead == null || !lead.Any())
+            {
+                return NotFound("No lead found");
+            }
+            return Ok(lead);
+        }
+
         [HttpPost("add-leads")]
         public async Task<IActionResult> AddLeadsAsync([FromBody] AddLeadsDto requestLeads)
         {
@@ -42,6 +53,10 @@ namespace CRM_API.Controllers
             if (leads == null || !leads.Any())
             {
                 return BadRequest("Need to complete required fields");
+            }
+            if (leads == "Cannot add lead")
+            {
+                return NotFound("Client is not found or archived");
             }
             return Created("", leads);
         }

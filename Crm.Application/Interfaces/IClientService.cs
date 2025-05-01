@@ -21,7 +21,7 @@ namespace Crm.Application.Interfaces
         Task<string> AddClientAsync(AddClientsDto addClient);
         Task<string> AddCommentsToClientAsync(int clientId, string content);
         Task<string> UpdateClientAsync(int clientId, UpdateClientsDto request);
-        Task<string> IsArchivedClientAsync(bool isArchived, int clientId);
+        Task<string> IsArchivedClientAsync(bool isArchived, List<int> clientId);
 
         //Task<string> UnarchivedClientAsync(int clientId);
         //Task<IEnumerable<ClientsDto>> GetRecentlyAddedClientAsync();

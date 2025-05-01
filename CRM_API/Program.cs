@@ -1,4 +1,5 @@
 using System.Text;
+using Azure.Identity;
 using Crm.Application.Interfaces;
 using Crm.Application.Services;
 using Crm.Domain.Interfaces;
@@ -15,8 +16,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CrmDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
 
+// if env file is on azure key vault
+/*
+var keyVaultUri = new Uri("https://your-keyvault-name.vault.azure.net/");
+builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+
+var connectionString = builder.Configuration["DatabaseConnectionString"];
+
+builder.Services.AddDbContext<CrmDbContext>(options =>
+    options.UseSqlServer(connectionString ?? throw new InvalidOperationException("Database connection string not found.")));
+*/
+
+
+
+
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -32,7 +47,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-
+//Api authorization
 builder.Services.AddSwaggerGen(s =>
 {
     //c.SwaggerDoc("v1", new OpenApiInfo
@@ -71,7 +86,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ApiKey",
         authBuilder =>
         {
-            authBuilder.RequireRole("Administrators");
+            authBuilder.RequireRole("Administrators");//admin is the required role to access protected endpoints
         });
 
 });

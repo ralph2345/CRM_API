@@ -9,6 +9,6 @@ namespace Crm.Domain.Interfaces
 {
     public interface IGlobalSearchRepository
     {
-        Task<(List<Clients> clients, List<Users> users)> SearchAsync(string search);
+        Task<(List<Clients> clients, List<Users> users/*, List<TaskDetails> task, List<LeadTbl> leads*/)> SearchAsync(string search);
     }
 }

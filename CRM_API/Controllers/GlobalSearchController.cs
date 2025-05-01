@@ -7,7 +7,7 @@ using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace CRM_API.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Basic")]
+    [Authorize(AuthenticationSchemes = "Basic", Policy = "ApiKey")]
     [Route("api/[controller]")]
     [ApiController]
     public class GlobalSearchController : ControllerBase

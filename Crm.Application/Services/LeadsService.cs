@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Crm.Application.DTO;
 using Crm.Application.DTO.Leads;
-using Crm.Domain.Interfaces;
 using Crm.Application.Interfaces;
 using Crm.Domain.Entities;
-using Crm.Application.DTO;
-using Azure.Core;
+using Crm.Domain.Interfaces;
 
 namespace Crm.Application.Services
 {
@@ -43,6 +39,14 @@ namespace Crm.Application.Services
             return new List<LeadsDto> { MapToDto(lead) };
         }
 
+        public async Task<IEnumerable<LeadsDto>> SearchLeadsAsync(string search)
+        {
+            var leads = await _leadsRepository.SearchLeadAsync(search);
+
+            var leadsResult = leads.Select(MapToDto).ToList();
+            return leadsResult;
+        }
+
         public async Task<string> AddLeadAsync(AddLeadsDto leads)
         {
             if (leads == null)
@@ -50,42 +54,36 @@ namespace Crm.Application.Services
                 throw new ArgumentNullException(nameof(leads));
             }
 
-            // this block get the data of client from leads.
-            // uncomment this block if the frontend use search client endpoints and also frontend
-            // is responsible for populating client data on leads data.
+            //get clients data
+            Clients? client = null;
 
             if (leads.ClientID != null)
             {
-                var client = await _clientRepository.GetClientsByIdAsync(leads.ClientID.Value);
+                // Fetch client data using ClientID
+                client = await _clientRepository.GetClientsByIdAsync(leads.ClientID.Value);
 
-                if (client != null)
+                //validation for archived clients
+                if (client == null || client.IsArchived)
                 {
-                    leads.FullName = string.IsNullOrEmpty(leads.FullName)
-                        ? $"{client.FirstName} {client.MiddleName} {client.LastName}".Trim()
-                        : leads.FullName;
-
-                    leads.Email = string.IsNullOrEmpty(leads.Email) ? client.Email : leads.Email;
-                    leads.PhoneNumber = string.IsNullOrEmpty(leads.PhoneNumber) ? client.PhoneNumber : leads.PhoneNumber;
-                    leads.CompanyName = string.IsNullOrEmpty(leads.CompanyName) ? client.CompanyDetails?.CompanyName : leads.CompanyName;
-                    leads.Industry = string.IsNullOrEmpty(leads.Industry) ? client.CompanyDetails?.IndustryType : leads.Industry;
+                    return "Cannot add lead";
                 }
             }
 
             var leadEntity = new LeadTbl
             {
-                FullName = leads.FullName,
-                Email = leads.Email,
-                PhoneNumber = leads.PhoneNumber,
-                CompanyName = leads.CompanyName,
-                Industry = leads.Industry,
+                ClientID = leads.ClientID,
+                FullName = client != null ? $"{client.FirstName} {client.MiddleName ?? ""} {client.LastName}".Trim() : null,
+                Email = client?.Email,
+                PhoneNumber = client?.PhoneNumber,
+                CompanyName = client?.CompanyDetails?.CompanyName,
+                Industry = client?.CompanyDetails?.IndustryType,
                 LeadSource = leads.LeadSource,
-                Status = leads.Status,
-                ClientID = leads.ClientID, //getting client information through client id, uncomment this if frontend use search client endpoints
+                Status = leads.Status
             };
 
             var deals = new DealTbl
             {
-                DealName = leads.Deals?.AssignedSalesRep,
+                DealName = leads.Deals?.DealName,
                 DealValue = leads.Deals?.DealValue,
                 Currency = leads.Deals?.Currency,
                 Stage = leads.Deals?.Stage,
@@ -108,7 +106,6 @@ namespace Crm.Application.Services
 
             await _leadsRepository.AddLeadAsync(leadEntity, deals, payment);
             return "Lead added successfully";
-
         }
 
         public async Task<string> UpdateLeadAsync(int leadId, UpdateLeadsDto update)
@@ -204,7 +201,7 @@ namespace Crm.Application.Services
                     Stage = lead.DealTbl.Stage,
                     AssignedSalesRep = lead.DealTbl.AssignedSalesRep,
                     Status = lead.DealTbl.Status,
-                    Notes = lead.DealTbl.Notes    
+                    Notes = lead.DealTbl.Notes
                 },
 
                 Payment = lead.Payment == null ? null : new PaymentDto

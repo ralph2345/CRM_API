@@ -10,12 +10,12 @@ namespace Crm.Domain.Interfaces
     public interface ITaskDetailsRepository
     {
         Task<(IEnumerable<TaskDetails>, int)> GetAllTaskAsync(bool ascending, TaskFilters filters,int pageNumber, int pageSize);
-        Task <TaskDetails> GetTaskByIdAsync(int id);
+        Task <List<TaskDetails>> GetTaskByIdAsync(List<int> id);
         Task <IEnumerable<TaskDetails>> GetAllArchieveAsync();
         Task <List<TaskDetails>> SearchTaskAsync(string? name);
         Task<string?> GetClientFullNameAsync(int clientId);
         Task AddTaskAsync(TaskDetails task);
-       //Task UpdateTaskAsync(TaskDetails task);
-        Task IsArchivedTaskAsync(bool isArchived, int taskId);
+        Task UpdateTaskAsync(List<TaskDetails> tasks);
+        Task IsArchivedTaskAsync(bool isArchived, List<int> taskId);
     }
 }

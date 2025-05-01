@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crm.Domain.Entities;
+﻿using Crm.Domain.Entities;
 using Crm.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Crm.Persistence.Repositories
 {
@@ -18,12 +12,14 @@ namespace Crm.Persistence.Repositories
         {
             _context = context;
         }
-        public async Task<(List<Clients> clients, List<Users> users/*, int totalRecords*/)> SearchAsync(string search/*, int pageNumber, int pageSize*/)
+        public async Task<(List<Clients> clients, List<Users> users/*, List<TaskDetails> task, List<LeadTbl> leads*/)> SearchAsync(string search)
         {
             var clientsQuery = _context.Clients
                 .Include(client => client.CompanyDetails)
                 .AsQueryable();
             var usersQuery = _context.Users.AsQueryable();
+            //var taskQuery = _context.TaskDetails.AsQueryable();
+            //var dealQuery = _context.LeadTbl.AsQueryable();
 
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -49,14 +45,27 @@ namespace Crm.Persistence.Repositories
                     user.PhoneNumber.Contains(search) ||
                     user.UserName.ToLower().Contains(search)
                 );
+
+                // Search Tasks
+                //taskQuery = taskQuery.Where(task =>
+                //    task.TaskTitle.ToLower().Contains(search) ||
+                //    task.TaskType.ToLower().Contains(search) 
+                //);
+
+                //// Search deals
+                //dealQuery = dealQuery.Where(lead =>
+                //    lead.DealTbl.DealName.ToLower().Contains(search) 
+                //);
             }
 
             var clients = await clientsQuery.ToListAsync();
             var users = await usersQuery.ToListAsync();
+            //var task = await taskQuery.ToListAsync();
+            //var leads = await dealQuery.ToListAsync();
 
-            return (clients, users);
+            return (clients, users/*, task, leads*/);
 
-           
+
         }
     }
 }

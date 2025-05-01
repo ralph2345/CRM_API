@@ -140,24 +140,23 @@ namespace Crm.Application.Services
             return "User Updated Successfully!";
         }
 
-        public async Task<string> IsDeactivateUserAsync(bool isDeactivate, int userId)
+        public async Task<string> IsDeactivateUserAsync(bool isDeactivate,List<int> userId)
         {
-            var user = await _userRepository.GetUserByIdAsync(userId);
+            var user = await _userRepository.GetMultipleUserByIdAsync(userId);
             if (user == null) return "User not found";
 
             await _userRepository.IsDeactivateUserAsync(isDeactivate, userId);
 
-            if (isDeactivate)
+            foreach (var users in user)
             {
-                user.Status = "Inactive";
-                return "User deactivated successfully";
+                users.Status = isDeactivate ? "Inactive" : "Active";
             }
-            else
-            {
-                user.Status = "Active";
-                return "User reactivated successfully";
-            }
-            
+
+            return isDeactivate
+                ? "Users deactivated successfully"
+                : "Users reactivated successfully";
+
+
         }
         public async Task<ApiResponseDto> ForgotPasswordAsync(ForgotPasswordDto request)
         {
